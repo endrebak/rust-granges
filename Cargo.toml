@@ -1,0 +1,7 @@
+[package]
+name = "ranges"
+version = "0.1.0"
+authors = ["Endre Bakken Stovner"]
+
+[dependencies]
+num = "0.1.36"
