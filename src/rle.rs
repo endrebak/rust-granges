@@ -128,111 +128,42 @@ impl Rle {
 
         }
 
-        let mut no_dup_vals_values = Vec::<i32>::new();
-        let mut no_dup_vals_lengths = Vec::<i32>::new();
+        // let mut dedup_vals_values = Vec::<i32>::new();
+        // let mut dedup_vals_lengths = Vec::<i32>::new();
+
+        // let mut v1 = unpack(new_values.pop());
+        // let mut l1 = unpack(new_lengths.pop());
+
+        // for (v2, l2) in new_values.iter().zip(new_lengths.iter()) {
+
+        //     if v1 != *v2 {
+        //         dedup_vals_lengths.push(l1);
+        //         dedup_vals_values.push(v1);
+        //         v1 = *v2;
+        //         l1 = *l2;
+        //     } else {
+        //         l1 += *l2
+        //     }
+        // }
 
 
-        new_lengths.reverse();
         new_values.reverse();
+        new_lengths.reverse();
 
         Rle {
             lengths: new_lengths,
             values: new_values,
             data: HashMap::new(),
         }
+
+
+        // dedup_vals_values.reverse();
+        // dedup_vals_lengths.reverse();
+
+        // Rle {
+        //     lengths: dedup_vals_lengths,
+        //     values: dedup_vals_values,
+        //     data: HashMap::new(),
+        // }
     }
 }
-
-
-// let mut ls1 = self.lengths.clone();
-// let mut ls2 = other.lengths.clone();
-
-// let mut vs1 = self.values.clone();
-// let mut vs2 = other.values.clone();
-
-// let mut new_values = Vec::<i32>::new();
-// let mut new_lengths = Vec::<i32>::new();
-
-// while ls1.len() + ls2.len() > 0 {
-
-//     let l1 = match ls1.pop() {
-//         Some(x) => x,
-//         None => 0,
-//     };
-
-//     let l2 = match ls2.pop() {
-//         Some(x) => x,
-//         None => 0,
-//     };
-
-
-//     let v1 = match vs1.pop() {
-//         Some(x) => x,
-//         None => 0,
-//     };
-
-//     let v2 = match vs2.pop() {
-//         Some(x) => x,
-//         None => 0,
-//     };
-
-//     if l1 < l2 {
-//         new_lengths.push(l1);
-//         new_values.push(v1 + v2);
-
-//         let mut l2_rest = l2 - l1;
-
-//         let v1 = match vs1.pop() {
-//             Some(x) => x,
-//             None => 0,
-//         };
-
-//         while l2_rest > 0 {
-//             let new_l1 = match ls1.pop() {
-//                     Some(x) => x,
-//                     None => 0,
-//                 };
-
-//             min(l2_rest, new_l1)
-//             new_lengths.push()
-//         }
-//     }
-
-//         // while v2
-
-//     // let min_length = min(l1, l2);
-
-
-
-// }
-// for l1, l2 in 0..shortest {
-
-//     let l1 = self.lengths[i];
-//     let l2 = other.lengths[i];
-//     let min_length = min(l1, l2);
-//     let rest = (l1 - l2).abs();
-//     println!("Rest: {:?}", rest);
-
-//     let v1 = self.values[i];
-//     let v2 = other.values[i];
-
-//     new_values.push(v1 + v2);
-//     new_lengths.push(min_length);
-
-//     // while ()
-// }
-// println!("Min length: {:?}", min_length);
-// println!("Values: {:?} {:?}", v1, v2);
-//     println!("Iteration: {:?}, Lengths: {:?} {:?}, Values: {:?} {:?}",
-//              i,
-//              self_length,
-//              other_length,
-//              self.values[i],
-//              other.values[i])
-
-// }
-
-//         println!("New values: {:?}", new_values);
-//         println!("New lengths: {:?}", new_lengths);
-//     }
-// }
