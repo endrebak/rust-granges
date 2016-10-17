@@ -1,5 +1,4 @@
 extern crate num;
-use std::collections::HashMap;
 use std::cmp::min;
 
 
@@ -7,20 +6,69 @@ use std::cmp::min;
 pub struct Rle {
     pub lengths: Vec<i32>,
     pub values: Vec<i32>,
-    pub data: HashMap<String, Vec<i32>>,
 }
 
 
-impl Rle {
-    pub fn add(&self, other: &Rle) -> Rle {
+fn unpack(n: Option<i32>) -> i32 {
+    match n {
+        Some(x) => x,
+        None => 0,
+    }
 
-        fn unpack(n: Option<i32>) -> i32 {
-            match n {
-                Some(x) => x,
-                None => 0,
+}
+impl Rle {
+    pub fn new(mut lengths: Vec<i32>, mut values: Vec<i32>) -> Self {
+
+        let mut new_lengths = Vec::<i32>::new();
+        let mut new_values = Vec::<i32>::new();
+
+        let mut prev_v = unpack(values.pop());
+        let mut sum_l = unpack(lengths.pop());
+        let length = lengths.len() - 1;
+
+        for (i, (l, v)) in lengths.iter().zip(values.iter()).enumerate() {
+            if *v == prev_v {
+                sum_l = *l;
+
+                println!("if\n\tl: {:?}, v: {:?}, sum_l: {:?}, prev_v: {:?}",
+                         l,
+                         v,
+                         sum_l,
+                         prev_v);
+
+            } else {
+                new_lengths.push(sum_l);
+                new_values.push(prev_v);
+                println!("else\n\tl: {:?}, v: {:?}, sum_l: {:?}, prev_v: {:?}",
+                         l,
+                         v,
+                         sum_l,
+                         prev_v);
+                prev_v = *v;
+                sum_l = 0;
             }
 
+            if i == length {
+                new_lengths.push(sum_l);
+                new_values.push(*v);
+            }
+            println!("new_lengths: {:?}", new_lengths);
+            println!("new_values: {:?}", new_values);
+            println!("i: {:?}, length: {:?}", i, length);
+
+            sum_l += *l;
         }
+        // new_lengths.reverse();
+        // new_values.reverse();
+
+        Rle {
+            lengths: new_lengths,
+            values: new_values,
+        }
+    }
+
+    pub fn add(&self, other: &Rle) -> Rle {
+
 
         let mut ls1 = self.lengths.clone();
         let mut ls2 = other.lengths.clone();
@@ -58,16 +106,19 @@ impl Rle {
                         break;
                     }
 
+                    // println!("l1: {:?}, left_l2: {:?}", l1, left_l2);
                     let new_length = min(l1, left_l2);
+                    // println!("new_length: {:?}", new_length);
 
                     left_l2 -= l1;
+                    // println!("left_l2: {:?}", left_l2);
 
                     new_lengths.push(new_length);
                     new_values.push(v1 + v2);
 
                     if left_l2 < 0 {
                         ls1.push(left_l2.abs());
-                        vs2.push(v2);
+                        vs1.push(v1);
                     }
 
                 }
@@ -103,9 +154,6 @@ impl Rle {
                         ls2.push(left_l1.abs());
                         vs2.push(v2);
                     }
-                    // println!("{:?} Second case left_l1:", left_l1);
-                    // println!("{:?} Second case l2:", l2);
-                    // println!("{:?} Second case v2:", v2);
                 }
 
 
@@ -118,33 +166,13 @@ impl Rle {
                 new_values.push(v2 + v1);
                 new_lengths.push(l2);
 
-                println!("Third case:");
-                println!("\t{:?} new_lengths.", new_lengths);
-                println!("\t{:?} new_values.", new_values);
+                // println!("Third case:");
+                // println!("\t{:?} new_lengths.", new_lengths);
+                // println!("\t{:?} new_values.", new_values);
             }
-
-            // println!("{:?} new_lengths.", new_lengths);
-            // println!("{:?} new_values.", new_values);
 
         }
 
-        // let mut dedup_vals_values = Vec::<i32>::new();
-        // let mut dedup_vals_lengths = Vec::<i32>::new();
-
-        // let mut v1 = unpack(new_values.pop());
-        // let mut l1 = unpack(new_lengths.pop());
-
-        // for (v2, l2) in new_values.iter().zip(new_lengths.iter()) {
-
-        //     if v1 != *v2 {
-        //         dedup_vals_lengths.push(l1);
-        //         dedup_vals_values.push(v1);
-        //         v1 = *v2;
-        //         l1 = *l2;
-        //     } else {
-        //         l1 += *l2
-        //     }
-        // }
 
 
         new_values.reverse();
@@ -153,7 +181,6 @@ impl Rle {
         Rle {
             lengths: new_lengths,
             values: new_values,
-            data: HashMap::new(),
         }
 
 
