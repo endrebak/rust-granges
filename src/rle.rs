@@ -1,5 +1,9 @@
 extern crate num;
+extern crate libc;
+
 use std::cmp::min;
+use std::slice;
+use self::libc::{size_t, int32_t};
 
 
 #[derive(Debug, PartialEq)]
@@ -8,6 +12,16 @@ pub struct Rle {
     pub values: Vec<i32>,
 }
 
+#[no_mangle]
+pub extern "C" fn new_rle(lengths_data: *const int32_t,
+                          lengths_length: size_t,
+                          values_data: *const int32_t,
+                          values_length: size_t)
+                          -> int32_t {
+    let lengths = unsafe { slice::from_raw_parts(lengths_data, lengths_length as usize) };
+    let values = unsafe { slice::from_raw_parts(values_data, values_length as usize) };
+    &Rle::new(lengths, values)
+}
 
 fn unpack(n: Option<i32>) -> i32 {
     match n {
@@ -16,50 +30,49 @@ fn unpack(n: Option<i32>) -> i32 {
     }
 
 }
+
 impl Rle {
-    pub fn new(mut lengths: Vec<i32>, mut values: Vec<i32>) -> Self {
+    pub fn new(lengths: Vec<i32>, values: Vec<i32>) -> Self {
+
+        if lengths.len() == 1 {
+            return Rle {
+                lengths: lengths,
+                values: values,
+            };
+        }
 
         let mut new_lengths = Vec::<i32>::new();
         let mut new_values = Vec::<i32>::new();
 
-        let mut prev_v = unpack(values.pop());
-        let mut sum_l = unpack(lengths.pop());
-        let length = lengths.len() - 1;
+        let mut prev_v = values[0];
+        let mut sum_l = lengths[0];
 
-        for (i, (l, v)) in lengths.iter().zip(values.iter()).enumerate() {
+
+        for (i, (l, v)) in lengths.iter().skip(1).zip(values.iter().skip(1)).enumerate() {
+            // println!("Iteration: {:?}", i);
             if *v == prev_v {
-                sum_l = *l;
-
-                println!("if\n\tl: {:?}, v: {:?}, sum_l: {:?}, prev_v: {:?}",
-                         l,
-                         v,
-                         sum_l,
-                         prev_v);
-
+                // println!("\t If v: {:?}, prev_v: {:?}, l: {:?}", *v, prev_v, l);
+                sum_l += *l;
             } else {
+                // println!("\t Else v: {:?}, prev_v: {:?}, l: {:?}", *v, prev_v, l);
                 new_lengths.push(sum_l);
                 new_values.push(prev_v);
-                println!("else\n\tl: {:?}, v: {:?}, sum_l: {:?}, prev_v: {:?}",
-                         l,
-                         v,
-                         sum_l,
-                         prev_v);
+                sum_l = *l;
                 prev_v = *v;
-                sum_l = 0;
             }
-
-            if i == length {
-                new_lengths.push(sum_l);
-                new_values.push(*v);
-            }
-            println!("new_lengths: {:?}", new_lengths);
-            println!("new_values: {:?}", new_values);
-            println!("i: {:?}, length: {:?}", i, length);
-
-            sum_l += *l;
+            // println!("New lengths: {:?}", new_lengths);
+            // println!("New values: {:?}", new_values);
         }
-        // new_lengths.reverse();
-        // new_values.reverse();
+
+        // println!("prev_v: {:?}", prev_v);
+        // println!("new_values[0]: {:?}", new_values[0]);
+        if prev_v != new_values[new_values.len() - 1] {
+            new_values.push(prev_v);
+            new_lengths.push(sum_l);
+        } else {
+            let last_idx = new_lengths.len() - 1;
+            new_lengths[last_idx] += sum_l;
+        }
 
         Rle {
             lengths: new_lengths,
@@ -173,24 +186,11 @@ impl Rle {
 
         }
 
-
-
         new_values.reverse();
         new_lengths.reverse();
 
-        Rle {
-            lengths: new_lengths,
-            values: new_values,
-        }
-
-
-        // dedup_vals_values.reverse();
-        // dedup_vals_lengths.reverse();
-
-        // Rle {
-        //     lengths: dedup_vals_lengths,
-        //     values: dedup_vals_values,
-        //     data: HashMap::new(),
-        // }
+        // println!("New values = {:?}", new_values);
+        // println!("New lengths = {:?}", new_lengths);
+        Rle::new(new_lengths, new_values)
     }
 }

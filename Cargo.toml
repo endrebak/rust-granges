@@ -5,3 +5,6 @@ authors = ["Endre Bakken Stovner"]
 
 [dependencies]
 num = "0.1.36"
+
+[lib]
+crate-type = ["dylib"]
