@@ -1,4 +1,37 @@
-mod rle;
+pub mod rle;
+use rle::Rle;
+pub use rle::rle_new;
+pub use rle::rle_free;
+
+use std::slice;
+extern crate libc;
+use self::libc::{size_t, int32_t};
+
+// #[no_mangle]
+// pub extern "C" fn rle_new(lengths_data: *const int32_t,
+//                           lengths_length: size_t,
+//                           values_data: *const int32_t,
+//                           values_length: size_t)
+//                           -> *mut Rle {
+//     let lengths = unsafe { slice::from_raw_parts(lengths_data, lengths_length as usize).to_vec() };
+//     let values = unsafe { slice::from_raw_parts(values_data, values_length as usize).to_vec() };
+
+//     return Box::into_raw(Box::new(Rle::new(lengths, values)));
+
+// }
+
+
+// #[no_mangle]
+// pub extern "C" fn rle_free(ptr: *mut Rle) {
+//     if ptr.is_null() {
+//         return;
+//     }
+//     unsafe {
+//         Box::from_raw(ptr);
+//     }
+// }
+
+
 
 #[cfg(test)]
 

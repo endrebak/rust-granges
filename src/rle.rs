@@ -1,10 +1,70 @@
-extern crate num;
 extern crate libc;
+use self::libc::{size_t, int32_t};
+
+extern crate num;
 
 use std::cmp::min;
 use std::slice;
-use self::libc::{size_t, int32_t};
 
+#[no_mangle]
+pub extern "C" fn rle_new(lengths_data: *const int32_t,
+                          lengths_length: size_t,
+                          values_data: *const int32_t,
+                          values_length: size_t)
+                          -> *mut Rle {
+    let lengths = unsafe { slice::from_raw_parts(lengths_data, lengths_length as usize).to_vec() };
+    let values = unsafe { slice::from_raw_parts(values_data, values_length as usize).to_vec() };
+
+    return Box::into_raw(Box::new(Rle::new(lengths, values)));
+
+}
+#[no_mangle]
+pub extern "C" fn rle_free(ptr: *mut Rle) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe {
+        Box::from_raw(ptr);
+    }
+}
+
+
+
+#[repr(C)]
+pub struct array_and_size {
+    values: Box<[i32]>,
+    size: int32_t,
+}
+
+
+#[no_mangle]
+pub extern "C" fn rle_show_values(ptr: *mut Rle) -> array_and_size {
+    let rle = unsafe {
+        assert!(!ptr.is_null());
+        &mut *ptr
+    };
+
+    let values = rle.values;
+    let length = values.len();
+
+    if length >= 20 {
+        // thanks to SO
+        let head = &values[..10];
+        let tail = &values[(length - 10)..];
+        let first_and_last: Vec<_> = head.iter().chain(tail.iter()).collect();
+        array_and_size {
+            values: first_and_last.into_boxed_slice(),
+            size: 20,
+        }
+    } else {
+        array_and_size {
+            values: values.into_boxed_slice(),
+            size: length as i32,
+        }
+    }
+
+
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Rle {
@@ -12,16 +72,6 @@ pub struct Rle {
     pub values: Vec<i32>,
 }
 
-#[no_mangle]
-pub extern "C" fn new_rle(lengths_data: *const int32_t,
-                          lengths_length: size_t,
-                          values_data: *const int32_t,
-                          values_length: size_t)
-                          -> int32_t {
-    let lengths = unsafe { slice::from_raw_parts(lengths_data, lengths_length as usize) };
-    let values = unsafe { slice::from_raw_parts(values_data, values_length as usize) };
-    &Rle::new(lengths, values)
-}
 
 fn unpack(n: Option<i32>) -> i32 {
     match n {
