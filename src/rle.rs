@@ -18,6 +18,7 @@ pub extern "C" fn rle_new(lengths_data: *const int32_t,
     return Box::into_raw(Box::new(Rle::new(lengths, values)));
 
 }
+
 #[no_mangle]
 pub extern "C" fn rle_free(ptr: *mut Rle) {
     if ptr.is_null() {
@@ -30,41 +31,27 @@ pub extern "C" fn rle_free(ptr: *mut Rle) {
 
 
 
-#[repr(C)]
-pub struct array_and_size {
-    values: Box<[i32]>,
-    size: int32_t,
+#[no_mangle]
+pub extern "C" fn rle_values_size(rle: *mut Rle) -> int32_t {
+    unsafe { (*rle).values.len() as i32 }
+}
+
+#[no_mangle]
+pub extern "C" fn rle_values(rle: *mut Rle) -> *mut int32_t {
+    unsafe { &mut (*rle).values[0] }
 }
 
 
 #[no_mangle]
-pub extern "C" fn rle_show_values(ptr: *mut Rle) -> array_and_size {
-    let rle = unsafe {
-        assert!(!ptr.is_null());
-        &mut *ptr
-    };
-
-    let values = rle.values;
-    let length = values.len();
-
-    if length >= 20 {
-        // thanks to SO
-        let head = &values[..10];
-        let tail = &values[(length - 10)..];
-        let first_and_last: Vec<_> = head.iter().chain(tail.iter()).collect();
-        array_and_size {
-            values: first_and_last.into_boxed_slice(),
-            size: 20,
-        }
-    } else {
-        array_and_size {
-            values: values.into_boxed_slice(),
-            size: length as i32,
-        }
-    }
-
-
+pub extern "C" fn rle_lengths_size(rle: *mut Rle) -> int32_t {
+    unsafe { (*rle).lengths.len() as i32 }
 }
+
+#[no_mangle]
+pub extern "C" fn rle_lengths(rle: *mut Rle) -> *mut int32_t {
+    unsafe { &mut (*rle).lengths[0] }
+}
+
 
 #[derive(Debug, PartialEq)]
 pub struct Rle {

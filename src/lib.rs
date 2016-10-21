@@ -3,6 +3,12 @@ use rle::Rle;
 pub use rle::rle_new;
 pub use rle::rle_free;
 
+pub use rle::rle_values;
+pub use rle::rle_values_size;
+
+pub use rle::rle_lengths;
+pub use rle::rle_lengths_size;
+
 use std::slice;
 extern crate libc;
 use self::libc::{size_t, int32_t};
@@ -30,6 +36,7 @@ use self::libc::{size_t, int32_t};
 //         Box::from_raw(ptr);
 //     }
 // }
+
 
 
 
