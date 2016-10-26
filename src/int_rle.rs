@@ -6,21 +6,23 @@ extern crate num;
 use std::cmp::min;
 use std::slice;
 
+
 #[no_mangle]
-pub extern "C" fn rle_new(lengths_data: *const int32_t,
-                          lengths_length: size_t,
-                          values_data: *const int32_t,
-                          values_length: size_t)
-                          -> *mut Rle {
+pub extern "C" fn int_rle_new(lengths_data: *const int32_t,
+                              lengths_length: size_t,
+                              values_data: *const int32_t,
+                              values_length: size_t)
+                              -> *mut IntRle {
     let lengths = unsafe { slice::from_raw_parts(lengths_data, lengths_length as usize).to_vec() };
     let values = unsafe { slice::from_raw_parts(values_data, values_length as usize).to_vec() };
 
-    return Box::into_raw(Box::new(Rle::new(lengths, values)));
+    return Box::into_raw(Box::new(IntRle::new(lengths, values)));
 
 }
 
+
 #[no_mangle]
-pub extern "C" fn rle_free(ptr: *mut Rle) {
+pub extern "C" fn int_rle_free(ptr: *mut IntRle) {
     if ptr.is_null() {
         return;
     }
@@ -32,29 +34,29 @@ pub extern "C" fn rle_free(ptr: *mut Rle) {
 
 
 #[no_mangle]
-pub extern "C" fn rle_values_size(rle: *mut Rle) -> int32_t {
+pub extern "C" fn int_rle_values_size(rle: *mut IntRle) -> int32_t {
     unsafe { (*rle).values.len() as i32 }
 }
 
 #[no_mangle]
-pub extern "C" fn rle_values(rle: *mut Rle) -> *mut int32_t {
+pub extern "C" fn int_rle_values(rle: *mut IntRle) -> *mut int32_t {
     unsafe { &mut (*rle).values[0] }
 }
 
 
 #[no_mangle]
-pub extern "C" fn rle_lengths_size(rle: *mut Rle) -> int32_t {
+pub extern "C" fn int_rle_lengths_size(rle: *mut IntRle) -> int32_t {
     unsafe { (*rle).lengths.len() as i32 }
 }
 
 #[no_mangle]
-pub extern "C" fn rle_lengths(rle: *mut Rle) -> *mut int32_t {
+pub extern "C" fn int_rle_lengths(rle: *mut IntRle) -> *mut int32_t {
     unsafe { &mut (*rle).lengths[0] }
 }
 
 
 #[derive(Debug, PartialEq)]
-pub struct Rle {
+pub struct IntRle {
     pub lengths: Vec<i32>,
     pub values: Vec<i32>,
 }
@@ -68,11 +70,11 @@ fn unpack(n: Option<i32>) -> i32 {
 
 }
 
-impl Rle {
+impl IntRle {
     pub fn new(lengths: Vec<i32>, values: Vec<i32>) -> Self {
 
         if lengths.len() == 1 {
-            return Rle {
+            return IntRle {
                 lengths: lengths,
                 values: values,
             };
@@ -85,7 +87,7 @@ impl Rle {
         let mut sum_l = lengths[0];
 
 
-        for (i, (l, v)) in lengths.iter().skip(1).zip(values.iter().skip(1)).enumerate() {
+        for (l, v) in lengths.iter().skip(1).zip(values.iter().skip(1)) {
             // println!("Iteration: {:?}", i);
             if *v == prev_v {
                 // println!("\t If v: {:?}, prev_v: {:?}, l: {:?}", *v, prev_v, l);
@@ -111,14 +113,15 @@ impl Rle {
             new_lengths[last_idx] += sum_l;
         }
 
-        Rle {
+        IntRle {
             lengths: new_lengths,
             values: new_values,
         }
     }
 
-    pub fn add(&self, other: &Rle) -> Rle {
-
+    pub fn op_int<F>(&self, other: &IntRle, op: F) -> IntRle
+        where F: Fn(i32, i32) -> i32
+    {
 
         let mut ls1 = self.lengths.clone();
         let mut ls2 = other.lengths.clone();
@@ -137,13 +140,9 @@ impl Rle {
             let v1 = unpack(vs1.pop());
             let v2 = unpack(vs2.pop());
 
-            // println!("New iteration:");
-            // println!("\tv1: {:?}, l1: {:?}", v1, l1);
-            // println!("\tv2: {:?}, l2: {:?}", v2, l2);
-
             if l1 < l2 {
 
-                new_values.push(v1 + v2);
+                new_values.push(op(v1, v2));
                 new_lengths.push(l1);
 
                 let mut left_l2 = l2 - l1;
@@ -156,15 +155,12 @@ impl Rle {
                         break;
                     }
 
-                    // println!("l1: {:?}, left_l2: {:?}", l1, left_l2);
                     let new_length = min(l1, left_l2);
-                    // println!("new_length: {:?}", new_length);
 
                     left_l2 -= l1;
-                    // println!("left_l2: {:?}", left_l2);
 
                     new_lengths.push(new_length);
-                    new_values.push(v1 + v2);
+                    new_values.push(op(v1, v2));
 
                     if left_l2 < 0 {
                         ls1.push(left_l2.abs());
@@ -173,14 +169,9 @@ impl Rle {
 
                 }
 
-                // println!("First case");
-                // println!("\t{:?} new_lengths.", new_lengths);
-                // println!("\t{:?} new_values.", new_values);
-
-
             } else if l2 < l1 {
 
-                new_values.push(v2 + v1);
+                new_values.push(op(v1, v2));
                 new_lengths.push(l2);
 
                 let mut left_l1 = l1 - l2;
@@ -198,7 +189,7 @@ impl Rle {
                     left_l1 -= l2;
 
                     new_lengths.push(new_length);
-                    new_values.push(v2 + v1);
+                    new_values.push(op(v1, v2));
 
                     if left_l1 < 0 {
                         ls2.push(left_l1.abs());
@@ -206,19 +197,11 @@ impl Rle {
                     }
                 }
 
-
-                // println!("Second case");
-                // println!("\t{:?} new_lengths.", new_lengths);
-                // println!("\t{:?} new_values.", new_values);
-
             } else if l2 == l1 {
 
-                new_values.push(v2 + v1);
+                new_values.push(op(v1, v2));
                 new_lengths.push(l2);
 
-                // println!("Third case:");
-                // println!("\t{:?} new_lengths.", new_lengths);
-                // println!("\t{:?} new_values.", new_values);
             }
 
         }
@@ -226,8 +209,6 @@ impl Rle {
         new_values.reverse();
         new_lengths.reverse();
 
-        // println!("New values = {:?}", new_values);
-        // println!("New lengths = {:?}", new_lengths);
-        Rle::new(new_lengths, new_values)
+        IntRle::new(new_lengths, new_values)
     }
 }
