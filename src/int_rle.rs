@@ -55,6 +55,12 @@ pub extern "C" fn int_rle_lengths(rle: *mut IntRle) -> *mut int32_t {
 }
 
 
+#[no_mangle]
+pub extern "C" fn int_add(rle_self: *mut IntRle, rle_other: *mut IntRle) -> IntRle {
+    unsafe { &*rle_self }.op_int(unsafe { &*rle_other }, |x, y| x + y)
+}
+
+
 #[derive(Debug, PartialEq)]
 pub struct IntRle {
     pub lengths: Vec<i32>,

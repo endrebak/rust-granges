@@ -15,26 +15,40 @@ try:
 except OSError:
     print("Library not found at " + libpath)
 
-# lib = ctypes.cdll.LoadLibrary("/Users/endrebakkenstovner/havpryd/code/rust-ffi-omnibus/examples/objects/target/debug/" +prefix + "objects" + extension)
+lib.int_rle_new.restype = POINTER(RleS)
 
-lib.rle_new.restype = POINTER(RleS)
+lib.int_rle_free.argtypes = (POINTER(RleS), )
 
-lib.rle_free.argtypes = (POINTER(RleS), )
+lib.int_rle_values.argtypes = (POINTER(RleS), )
+lib.int_rle_values.restype = POINTER(c_int32)
 
-# lib.rle_populate.argtypes = (POINTER(RleS), )
+lib.int_rle_lengths.argtypes = (POINTER(RleS), )
+lib.int_rle_lengths.restype = POINTER(c_int32)
 
-lib.rle_values.argtypes = (POINTER(RleS), )
-lib.rle_values.restypes = POINTER(c_int32)
+lib.int_rle_values_size.argtypes = (POINTER(RleS), )
+lib.int_rle_values_size.restype = c_int32
 
-lib.rle_lengths.argtypes = (POINTER(RleS), )
-lib.rle_lengths.restypes = POINTER(c_int32)
+lib.int_rle_lengths_size.argtypes = (POINTER(RleS), )
+lib.int_rle_lengths_size.restype = c_int32
 
-lib.rle_values_size.argtypes = (POINTER(RleS), )
-lib.rle_values_size.restypes = c_int32
 
-lib.rle_lengths_size.argtypes = (POINTER(RleS), )
-lib.rle_lengths_size.restypes = c_int32
-# lib.rle_population_of.restype =
+def format_rle(size, lengths_pointer, values_pointer):
+    """
+    Prints the lengths and values of the run length encoding
+    """
+
+    if size > 20:
+        return "".join(["Lengths: [",
+                ", ".join([str(i) for i in lengths_pointer[:10]]),
+                ", ..., ",
+                ", ".join([str(i) for i in lengths_pointer[size-10:size]]),
+                "]\nValues: [",
+                ", ".join([str(i) for i in values_pointer[:10]]),
+                ", ..., ",
+                ", ".join([str(i) for i in values_pointer[size-10:size]]),
+                "]"])
+    else:
+        return "Lengths: " + str(lengths_pointer[:size]) + "\nValues: " + str(values_pointer[:size])
 
 
 class Rle:
@@ -46,58 +60,31 @@ class Rle:
 
         lengths_array = (c_int32 * len(lengths))(*lengths)
         values_array = (c_int32 * len(values))(*values)
-        self.obj = lib.rle_new(lengths_array, c_size_t(lengths_length), values_array, c_size_t(values_length))
+        self.obj = lib.int_rle_new(lengths_array, c_size_t(lengths_length), values_array, c_size_t(values_length))
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        lib.rle_free(self.obj)
+        lib.int_rle_free(self.obj)
 
     def __str__(self):
 
-        lengths_size = lib.rle_lengths_size(self.obj)
-        values_size = lib.rle_values_size(self.obj)
-        print(values_size, "values_size")
-        print(lengths_size, "lengths_size")
+        lengths_size = lib.int_rle_lengths_size(self.obj)
+        values_size = lib.int_rle_values_size(self.obj)
+
         assert lengths_size == values_size
 
-        values_pointer = lib.rle_values(self.obj)
-        print("values_pointer:", values_pointer)
-        ar = ctypes.cast(values_pointer, ctypes.POINTER(ctypes.c_int32)).contents
-        print(ar)
+        size = lengths_size
 
-        # print(ar[0])
-        # print([values[i] for i in range(values_size)])
+        values_pointer = lib.int_rle_values(self.obj)
+        lengths_pointer = lib.int_rle_lengths(self.obj)
 
-        # dtype = ctypes.c_int32 * values_size
-        # # array_pointer = ctypes.cast(lib.rle_values(self.obj), ctypes.POINTER(dtype))
-        # p = pointer(c_int32(lib.rle_values(self.obj)))
-        # a = np.fromiter(p, dtype=np.int32, count=values_size) # copy
+        return format_rle(size, lengths_pointer, values_pointer)
 
-        # print(a)
-
-        # print(lib.rle_values(self.obj))
-        # p = ctypes.POINTER(ctypes.c_int32)
-        # print(ctypes.cast(lib.rle_values(self.obj), p))
-        # print(ctypes.cast(lib.rle_values(self.obj), p).contents)
-        # values = lib.rle_values(self.obj)
-        # vals = [values[i] for i in range(values_size)]
-        # addr = lib.rle_values(self.obj)
-        # ArrayType = ctypes.c_int32*values_size
-        # # addr = ctypes.addressof(contents)
-        # a = np.frombuffer(ArrayType.from_address(addr))
-        # print(a)
-
-        # values = ctypes.cast(lib.rle_values(self.obj), ctypes.POINTER(ctypes.c_int32))
-        # ar = np.fromiter(ctypes.POINTER(ctypes.c_int32), dtype=np.int32, count=values_size)
-        # print(ar)
+    def __add__(self, other):
+        lib.
 
 
-rle = Rle([1, 1, 2] * 10, [1, 1, 2] * 10)
+rle = Rle([1, 1, 1, 1] * 10, [1, 1, 2, 3] * 10)
 print(rle)
-# with ZipCodeDatabase() as database:
-#     database.populate()
-#     pop1 = database.population_of("90210")
-#     pop2 = database.population_of("20500")
-#     print(pop1 - pop2)
