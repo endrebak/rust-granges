@@ -156,6 +156,25 @@ mod tests {
 
 
     #[test]
+    fn create_new_rle9() {
+
+        let lengths = vec![1, 1, 1];
+        let values = vec![0, 0, 0];
+        println!("Test starting");
+        let actual_result = IntRle::new(lengths, values);
+
+        let expected_result = IntRle {
+            lengths: vec![3],
+            values: vec![0],
+        };
+
+        println!("Actual {:?}", actual_result);
+        println!("Expected {:?}", expected_result);
+        assert_eq!(expected_result, actual_result);
+    }
+
+
+    #[test]
     fn add_two_rles1() {
 
         let rle1 = IntRle {

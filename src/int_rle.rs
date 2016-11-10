@@ -56,8 +56,9 @@ pub extern "C" fn int_rle_lengths(rle: *mut IntRle) -> *mut int32_t {
 
 
 #[no_mangle]
-pub extern "C" fn int_add(rle_self: *mut IntRle, rle_other: *mut IntRle) -> IntRle {
-    unsafe { &*rle_self }.op_int(unsafe { &*rle_other }, |x, y| x + y)
+pub extern "C" fn int_rle_add(rle_self: *mut IntRle, rle_other: *mut IntRle) -> *mut IntRle {
+    return Box::into_raw(Box::new(unsafe { &*rle_self }
+        .op_int(unsafe { &*rle_other }, |x, y| x + y)));
 }
 
 
@@ -92,7 +93,6 @@ impl IntRle {
         let mut prev_v = values[0];
         let mut sum_l = lengths[0];
 
-
         for (l, v) in lengths.iter().skip(1).zip(values.iter().skip(1)) {
             // println!("Iteration: {:?}", i);
             if *v == prev_v {
@@ -109,9 +109,10 @@ impl IntRle {
             // println!("New values: {:?}", new_values);
         }
 
-        // println!("prev_v: {:?}", prev_v);
-        // println!("new_values[0]: {:?}", new_values[0]);
-        if prev_v != new_values[new_values.len() - 1] {
+        if new_values.len() == 0 {
+            new_values.push(prev_v);
+            new_lengths.push(sum_l);
+        } else if prev_v != new_values[new_values.len() - 1] {
             new_values.push(prev_v);
             new_lengths.push(sum_l);
         } else {

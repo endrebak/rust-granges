@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import os
 import sys, ctypes
@@ -31,6 +32,9 @@ lib.int_rle_values_size.restype = c_int32
 lib.int_rle_lengths_size.argtypes = (POINTER(RleS), )
 lib.int_rle_lengths_size.restype = c_int32
 
+lib.int_rle_add.argtypes = (POINTER(RleS), POINTER(RleS))
+lib.int_rle_add.restype = POINTER(RleS)
+
 
 def format_rle(size, lengths_pointer, values_pointer):
     """
@@ -52,6 +56,8 @@ def format_rle(size, lengths_pointer, values_pointer):
 
 
 class Rle:
+
+
     def __init__(self, lengths, values):
 
         lengths_length, values_length = len(lengths), len(values)
@@ -60,31 +66,54 @@ class Rle:
 
         lengths_array = (c_int32 * len(lengths))(*lengths)
         values_array = (c_int32 * len(values))(*values)
-        self.obj = lib.int_rle_new(lengths_array, c_size_t(lengths_length), values_array, c_size_t(values_length))
+        self.ptr = lib.int_rle_new(lengths_array, c_size_t(lengths_length), values_array, c_size_t(values_length))
+
 
     def __enter__(self):
         return self
 
+
     def __exit__(self, exc_type, exc_value, traceback):
-        lib.int_rle_free(self.obj)
+        lib.int_rle_free(self.ptr)
+
 
     def __str__(self):
 
-        lengths_size = lib.int_rle_lengths_size(self.obj)
-        values_size = lib.int_rle_values_size(self.obj)
+        lengths_size = lib.int_rle_lengths_size(self.ptr)
+        values_size = lib.int_rle_values_size(self.ptr)
 
         assert lengths_size == values_size
 
         size = lengths_size
 
-        values_pointer = lib.int_rle_values(self.obj)
-        lengths_pointer = lib.int_rle_lengths(self.obj)
+        values_pointer = lib.int_rle_values(self.ptr)
+        lengths_pointer = lib.int_rle_lengths(self.ptr)
 
         return format_rle(size, lengths_pointer, values_pointer)
 
+
     def __add__(self, other):
-        lib.
+
+        new_rle = lib.int_rle_add(self.ptr, other.ptr)
+
+        lengths_size = lib.int_rle_lengths_size(new_rle)
+        values_size = lib.int_rle_values_size(new_rle)
+
+        assert lengths_size == values_size
+
+        size = lengths_size
+
+        values_pointer = lib.int_rle_values(new_rle)
+        lengths_pointer = lib.int_rle_lengths(new_rle)
+
+        lengths = np.fromiter(lengths_pointer, dtype=np.int32, count=size)
+        values = np.fromiter(values_pointer, dtype=np.int32, count=size)
+        print(lengths)
+        print(values)
+
+        return Rle(lengths, values)
 
 
-rle = Rle([1, 1, 1, 1] * 10, [1, 1, 2, 3] * 10)
-print(rle)
+rle = Rle(np.array([1, 1, 1, 1] * 10), [1, 1, 2, 3] * 10)
+rle2 = Rle([1, 1, 1, 1] * 10, [3, 1, 2, 3] * 10)
+print(rle + rle2)
