@@ -11,3 +11,14 @@ This is my first rust project and the first time I have touched a low-level lang
 #### Develop
 
 `cargo watch test` to run tests
+
+#### Play around with it
+
+```
+cargo build
+python test_ranges.py
+```
+
+#### Important differences
+
+rust-ranges does not cycle arguments of different lengths.

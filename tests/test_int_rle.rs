@@ -174,6 +174,24 @@ mod tests {
         assert_eq!(expected_result, actual_result);
     }
 
+
+    #[test]
+    fn create_new_rle10() {
+
+        let lengths = vec![1, 1];
+        let values = vec![1, 1];
+        println!("Test starting");
+        let actual_result = IntRle::new(lengths, values);
+
+        let expected_result = IntRle {
+            lengths: vec![2],
+            values: vec![1],
+        };
+
+        println!("Actual {:?}", actual_result);
+        println!("Expected {:?}", expected_result);
+        assert_eq!(expected_result, actual_result);
+    }
     // zero lengths should never heppen as we check the data before creating the Rles
     // #[test]
     // #[should_panic]
@@ -332,6 +350,7 @@ mod tests {
     }
 
 
+
     #[test]
     fn add_two_rles6() {
 
@@ -360,6 +379,39 @@ mod tests {
             values: vec![3, 4, 5, 2, 5, 4, 5, 4, 2, 4, 6, 4, 3, 6, 5, 4, 3, 4, 3, 4, 5, 4, 5, 4,
                          5, 4, 5, 6, 5, 4, 3, 2, 5, 4, 6, 2, 4, 3, 5, 3, 5, 4, 3, 5, 4, 5, 4, 6,
                          5, 4, 5, 2, 3, 4, 3, 5, 3, 2, 4, 2, 5, 3, 4, 5, 3, 5],
+        };
+
+        println!("Test starts");
+        let actual_result = rle1.op_int(&rle2, |x, y| x + y);
+        println!("\nExpected lengths: {:?}", expected_result.lengths);
+        println!("Actual lengths: {:?}\n", actual_result.lengths);
+        println!("Expected values: {:?}", expected_result.values);
+        println!("Actual values: {:?}", actual_result.values);
+        assert_eq!(actual_result, expected_result);
+
+        let actual_result2 = rle2.op_int(&rle1, |x, y| x + y);
+        assert_eq!(actual_result2, expected_result);
+
+    }
+
+
+
+    #[test]
+    fn add_two_rles7() {
+
+        let rle1 = IntRle {
+            lengths: vec![1, 1],
+            values: vec![1, 1],
+        };
+
+        let rle2 = IntRle {
+            lengths: vec![2, 1, 1],
+            values: vec![3, 1, 2],
+        };
+
+        let expected_result = IntRle {
+            lengths: vec![2, 1, 1],
+            values: vec![4, 2, 3],
         };
 
         println!("Test starts");

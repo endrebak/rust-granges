@@ -118,12 +118,14 @@ class Rle:
         lengths = np.fromiter(lengths_pointer, dtype=np.int32, count=size)
         values = np.fromiter(values_pointer, dtype=np.int32, count=size)
 
+        print(lengths)
+
         return Rle(lengths, values)
 
 
 # rle = Rle(np.array([1, 1, 1, 1] * 10), [1, 1, 2, 3] * 10)
 # rle2 = Rle([1, 1, 1, 1] * 10, [3, 1, 2, 3] * 10)
-# rle = Rle(np.array([0, 1]), [1, 1])
+rle = Rle(np.array([1, 1]), [1, 1])
 rle2 = Rle([2, 1, 1], [3, 1, 2])
 # print(rle)
 # print(rle2)
