@@ -16,6 +16,10 @@ try:
 except OSError:
     print("Library not found at " + libpath)
 
+
+lib.rle_find_zero_lengths.argtypes = (POINTER(c_int32), c_int32)
+lib.rle_find_zero_lengths.restype = c_int32
+
 lib.int_rle_new.restype = POINTER(RleS)
 
 lib.int_rle_free.argtypes = (POINTER(RleS), )
@@ -57,7 +61,6 @@ def format_rle(size, lengths_pointer, values_pointer):
 
 class Rle:
 
-
     def __init__(self, lengths, values):
 
         lengths_length, values_length = len(lengths), len(values)
@@ -66,6 +69,12 @@ class Rle:
 
         lengths_array = (c_int32 * len(lengths))(*lengths)
         values_array = (c_int32 * len(values))(*values)
+
+        contains_zero = lib.rle_find_zero_lengths(lengths_array, lengths_length)
+
+        if contains_zero:
+            raise ValueError("Lengths array contains zero values.")
+
         self.ptr = lib.int_rle_new(lengths_array, c_size_t(lengths_length), values_array, c_size_t(values_length))
 
 
@@ -108,12 +117,14 @@ class Rle:
 
         lengths = np.fromiter(lengths_pointer, dtype=np.int32, count=size)
         values = np.fromiter(values_pointer, dtype=np.int32, count=size)
-        print(lengths)
-        print(values)
 
         return Rle(lengths, values)
 
 
-rle = Rle(np.array([1, 1, 1, 1] * 10), [1, 1, 2, 3] * 10)
-rle2 = Rle([1, 1, 1, 1] * 10, [3, 1, 2, 3] * 10)
-print(rle + rle2)
+# rle = Rle(np.array([1, 1, 1, 1] * 10), [1, 1, 2, 3] * 10)
+# rle2 = Rle([1, 1, 1, 1] * 10, [3, 1, 2, 3] * 10)
+# rle = Rle(np.array([0, 1]), [1, 1])
+rle2 = Rle([2, 1, 1], [3, 1, 2])
+# print(rle)
+# print(rle2)
+# print(rle + rle2)

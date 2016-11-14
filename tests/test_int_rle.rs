@@ -7,6 +7,7 @@ pub use ranges::int_rle::IntRle;
 mod tests {
     use super::IntRle;
 
+
     #[test]
     fn create_new_rle1() {
 
@@ -173,6 +174,14 @@ mod tests {
         assert_eq!(expected_result, actual_result);
     }
 
+    // zero lengths should never heppen as we check the data before creating the Rles
+    // #[test]
+    // #[should_panic]
+    // fn create_new_rle10() {
+
+    //     let lengths = vec![1, 0];
+    //     let values = vec![0, 1];
+    // }
 
     #[test]
     fn add_two_rles1() {

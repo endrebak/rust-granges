@@ -62,6 +62,8 @@ pub extern "C" fn int_rle_add(rle_self: *mut IntRle, rle_other: *mut IntRle) -> 
 }
 
 
+
+
 #[derive(Debug, PartialEq)]
 pub struct IntRle {
     pub lengths: Vec<i32>,
@@ -76,6 +78,8 @@ fn unpack(n: Option<i32>) -> i32 {
     }
 
 }
+
+
 
 impl IntRle {
     pub fn new(lengths: Vec<i32>, values: Vec<i32>) -> Self {
@@ -93,8 +97,10 @@ impl IntRle {
         let mut prev_v = values[0];
         let mut sum_l = lengths[0];
 
+
         for (l, v) in lengths.iter().skip(1).zip(values.iter().skip(1)) {
             // println!("Iteration: {:?}", i);
+
             if *v == prev_v {
                 // println!("\t If v: {:?}, prev_v: {:?}, l: {:?}", *v, prev_v, l);
                 sum_l += *l;
