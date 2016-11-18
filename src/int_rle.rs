@@ -56,9 +56,12 @@ pub extern "C" fn int_rle_lengths(rle: *mut IntRle) -> *mut int32_t {
 
 
 #[no_mangle]
-pub extern "C" fn int_rle_add(rle_self: *mut IntRle, rle_other: *mut IntRle) -> *mut IntRle {
+pub extern "C" fn int_rle_add(rle_self: *mut IntRle,
+                              rle_other: *mut IntRle,
+                              identity: i32)
+                              -> *mut IntRle {
     return Box::into_raw(Box::new(unsafe { &*rle_self }
-        .op_int(unsafe { &*rle_other }, |x, y| x + y)));
+        .op_int(unsafe { &*rle_other }, |x, y| x + y, identity)));
 }
 
 
@@ -79,6 +82,30 @@ fn unpack(n: Option<i32>) -> i32 {
 
 }
 
+
+pub fn extend_intrle(lengths1: &mut Vec<i32>,
+                     values1: &mut Vec<i32>,
+                     lengths2: &mut Vec<i32>,
+                     values2: &mut Vec<i32>,
+                     identity: i32) {
+
+    let sum_l1: i32 = lengths1.iter().sum();
+    let sum_l2: i32 = lengths2.iter().sum();
+
+    if sum_l1 < sum_l2 {
+        let diff = sum_l2 - sum_l1;
+
+        lengths1.push(diff);
+        values1.push(identity);
+    } else if sum_l2 < sum_l1 {
+        let diff = sum_l1 - sum_l2;
+
+        lengths2.push(diff);
+        values2.push(identity);
+    }
+
+
+}
 
 
 impl IntRle {
@@ -132,7 +159,7 @@ impl IntRle {
         }
     }
 
-    pub fn op_int<F>(&self, other: &IntRle, op: F) -> IntRle
+    pub fn op_int<F>(&self, other: &IntRle, op: F, identity: i32) -> IntRle
         where F: Fn(i32, i32) -> i32
     {
 
@@ -141,6 +168,9 @@ impl IntRle {
 
         let mut vs1 = self.values.clone();
         let mut vs2 = other.values.clone();
+
+        extend_intrle(&mut ls1, &mut vs1, &mut ls2, &mut vs2, identity);
+
 
         let mut new_values = Vec::<i32>::new();
         let mut new_lengths = Vec::<i32>::new();

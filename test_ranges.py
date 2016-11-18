@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys, ctypes
-from ctypes import c_char_p, c_uint32, Structure, POINTER, c_int32, c_size_t, pointer
+from ctypes import c_char_p, c_int64, Structure, POINTER, c_int32, c_size_t, pointer
 
 class RleS(Structure):
     pass
@@ -59,11 +59,53 @@ def format_rle(size, lengths_pointer, values_pointer):
         return "Lengths: " + str(lengths_pointer[:size]) + "\nValues: " + str(values_pointer[:size])
 
 
+def make_rles_same_length(self, other, identity, identity_type):
+
+    self_lengths_series = self.lengths()
+    other_lengths_series = other.lengths()
+
+    self_length = self_lengths_series.sum()
+    other_length = other_lengths_series.sum()
+
+    if self_length < other_length:
+
+        difference = other_length - self_length
+        self_lengths_copy = self_lengths_series.copy().append(pd.Series(difference, dtype=identity_type))
+
+        self_values_copy = self.values().append(pd.Series(identity, dtype=identity_type))
+
+        return Rle(self_lengths_copy, self_values_copy), other
+
+    elif other_length < self_length:
+
+        difference = self_length - other_length
+        other_lengths_copy = other_lengths.copy().append(pd.Series(difference, dtype=identity_type))
+
+        other_values_copy = other.values().append(pd.Series(identity, dtype=identity_type))
+
+        return self, Rle(other_lengths_copy, other_values_copy)
+
+    else:
+
+        return self, other
+
+
+
+
 class Rle:
 
     def __init__(self, lengths, values):
 
         lengths_length, values_length = len(lengths), len(values)
+
+        values_type = pd.Series(values).dtype
+
+        if values_type in ["int32", "int64"]:
+            rle_type = np.int32
+        else:# elif values_type in ["float32" or "float64"]:
+            raise ValueError(values_type + " not supported.")
+
+        self.dtype = rle_type
 
         assert lengths_length == values_length
 
@@ -100,8 +142,39 @@ class Rle:
 
         return format_rle(size, lengths_pointer, values_pointer)
 
+    def lengths(self):
+
+        self_lengths = lib.int_rle_lengths(self.ptr)
+        self_lengths_size = lib.int_rle_lengths_size(self.ptr)
+        lengths = pd.Series(np.fromiter(self_lengths, dtype=np.int32, count=self_lengths_size))
+        return lengths.copy()
+
+    def values(self):
+
+        if self.dtype == np.int32:
+            self_values_size = lib.int_rle_values_size(self.ptr)
+            self_values = lib.int_rle_values(self.ptr)
+            values = pd.Series(np.fromiter(self_values, dtype=np.int64, count=self_values_size))
+        else:
+            raise ValueError(str(self.dtype) + " not supported.")
+
+        return values.copy()
 
     def __add__(self, other):
+
+        self, other = make_rles_same_length(self, other, 0, np.int32)
+
+        self_lengths_size = lib.int_rle_lengths_size(self.ptr)
+        self_lengths = lib.int_rle_lengths(self.ptr)
+
+        other_lengths_size = lib.int_rle_lengths_size(other.ptr)
+        other_lengths = lib.int_rle_lengths(other.ptr)
+
+        self_lengths_series = pd.Series(np.fromiter(self_lengths, dtype=np.int32, count=self_lengths_size))
+        other_lengths_series = pd.Series(np.fromiter(other_lengths, dtype=np.int32, count=other_lengths_size))
+
+        self_length = self_lengths_series.sum()
+        other_length = other_lengths_series.sum()
 
         new_rle = lib.int_rle_add(self.ptr, other.ptr)
 
@@ -129,4 +202,4 @@ rle = Rle(np.array([1, 1]), [1, 1])
 rle2 = Rle([2, 1, 1], [3, 1, 2])
 # print(rle)
 # print(rle2)
-# print(rle + rle2)
+print(rle + rle2)

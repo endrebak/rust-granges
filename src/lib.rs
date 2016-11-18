@@ -29,9 +29,7 @@ pub extern "C" fn rle_find_zero_lengths(array: *const int32_t, size: int32_t) ->
 
 pub fn find_zero_lengths(lengths: &[i32], size: int32_t) -> i32 {
 
-    // println!("{:?} rust size", size);
     for i in 0..(size) {
-        // println!("{:?}, {:?}", i, lengths[i as usize]);
         if lengths[i as usize] < 1 {
             return 1;
         };
@@ -41,6 +39,36 @@ pub fn find_zero_lengths(lengths: &[i32], size: int32_t) -> i32 {
 
 }
 
+
+
+pub extern "C" fn lengths_equal(array1: *const int32_t,
+                                size1: int32_t,
+                                array2: *const int32_t,
+                                size2: int32_t)
+                                -> int32_t {
+
+    let lengths1: &[i32] = unsafe {
+        !array1.is_null();
+
+        slice::from_raw_parts(array1, size1 as usize)
+    };
+
+    let lengths2: &[i32] = unsafe {
+        !array2.is_null();
+
+        slice::from_raw_parts(array2, size2 as usize)
+    };
+
+    let sum1: i32 = lengths1.iter().sum();
+    let sum2 = lengths2.iter().sum();
+    return (sum1 == sum2) as i32;
+
+}
+
+// let sum1 = lengths1.iter().fold(0, |mut sum, &x| {
+//     sum += x;
+//     sum
+// });
 
 #[cfg(test)]
 mod rle_tests {
