@@ -1,6 +1,7 @@
 use std::slice;
 use self::libc::int32_t;
 
+pub mod float_rle;
 pub mod int_rle;
 pub use int_rle::int_rle_new;
 pub use int_rle::int_rle_free;

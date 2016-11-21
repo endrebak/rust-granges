@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys, ctypes
-from ctypes import c_char_p, c_int64, Structure, POINTER, c_int32, c_size_t, pointer
+from ctypes import c_char_p, c_int32, c_int64, Structure, POINTER, c_int32, c_size_t, pointer
 
 class RleS(Structure):
     pass
@@ -90,8 +90,6 @@ def make_rles_same_length(self, other, identity, identity_type):
         return self, other
 
 
-
-
 class Rle:
 
     def __init__(self, lengths, values):
@@ -154,7 +152,7 @@ class Rle:
         if self.dtype == np.int32:
             self_values_size = lib.int_rle_values_size(self.ptr)
             self_values = lib.int_rle_values(self.ptr)
-            values = pd.Series(np.fromiter(self_values, dtype=np.int64, count=self_values_size))
+            values = pd.Series(np.fromiter(self_values, dtype=np.int32, count=self_values_size))
         else:
             raise ValueError(str(self.dtype) + " not supported.")
 
@@ -191,8 +189,6 @@ class Rle:
         lengths = np.fromiter(lengths_pointer, dtype=np.int32, count=size)
         values = np.fromiter(values_pointer, dtype=np.int32, count=size)
 
-        print(lengths)
-
         return Rle(lengths, values)
 
 
@@ -202,4 +198,6 @@ rle = Rle(np.array([1, 1]), [1, 1])
 rle2 = Rle([2, 1, 1], [3, 1, 2])
 # print(rle)
 # print(rle2)
+print(rle)
+print(rle2)
 print(rle + rle2)
