@@ -35,34 +35,34 @@ pub extern "C" fn float_rle_free(ptr: *mut FloatRle) {
 
 
 #[no_mangle]
-pub extern "C" fn int_rle_values_size(rle: *mut IntRle) -> int32_t {
-    unsafe { (*rle).values.len() as f64 }
+pub extern "C" fn float_rle_values_size(rle: *mut FloatRle) -> int32_t {
+    unsafe { (*rle).values.len() as i32 }
 }
 
 #[no_mangle]
-pub extern "C" fn int_rle_values(rle: *mut IntRle) -> *mut int32_t {
+pub extern "C" fn float_rle_values(rle: *mut FloatRle) -> *mut c_double {
     unsafe { &mut (*rle).values[0] }
 }
 
 
 #[no_mangle]
-pub extern "C" fn int_rle_lengths_size(rle: *mut IntRle) -> int32_t {
-    unsafe { (*rle).lengths.len() as f64 }
+pub extern "C" fn float_rle_lengths_size(rle: *mut FloatRle) -> int32_t {
+    unsafe { (*rle).lengths.len() as i32 }
 }
 
 #[no_mangle]
-pub extern "C" fn int_rle_lengths(rle: *mut IntRle) -> *mut int32_t {
+pub extern "C" fn float_rle_lengths(rle: *mut FloatRle) -> *mut int32_t {
     unsafe { &mut (*rle).lengths[0] }
 }
 
 
 #[no_mangle]
-pub extern "C" fn int_rle_add(rle_self: *mut IntRle,
-                              rle_other: *mut IntRle,
-                              identity: f64)
-                              -> *mut IntRle {
+pub extern "C" fn float_rle_add(rle_self: *mut FloatRle,
+                                rle_other: *mut FloatRle,
+                                identity: f64)
+                                -> *mut FloatRle {
     return Box::into_raw(Box::new(unsafe { &*rle_self }
-        .op_int(unsafe { &*rle_other }, |x, y| x + y, identity)));
+        .op_float(unsafe { &*rle_other }, |x, y| x + y, identity)));
 }
 
 
@@ -169,7 +169,7 @@ impl FloatRle {
         }
     }
 
-    pub fn op_int<F>(&self, other: &FloatRle, op: F, identity: f64) -> FloatRle
+    pub fn op_float<F>(&self, other: &FloatRle, op: F, identity: f64) -> FloatRle
         where F: Fn(f64, f64) -> f64
     {
 
