@@ -1,6 +1,7 @@
 extern crate ranges;
 
 
+
 pub use ranges::float_rle::FloatRle;
 pub use ranges::float_rle::extend_floatrle;
 
@@ -9,7 +10,16 @@ pub use ranges::float_rle::extend_floatrle;
 mod tests {
     use super::FloatRle;
     use super::extend_floatrle;
+    fn eq_with_nan_eq(a: f64, b: f64) -> bool {
+        (a.is_nan() && b.is_nan()) || (a == b)
+    }
 
+    fn vec_compare(va: &[f64], vb: &[f64]) -> bool {
+        (va.len() == vb.len()) &&  // zip stops at the shortest
+            va.iter()
+            .zip(vb)
+            .all(|(a,b)| eq_with_nan_eq(*a,*b))
+    }
 
     #[test]
     fn create_new_rle1() {
@@ -78,6 +88,8 @@ mod tests {
             lengths: vec![100, 2, 2],
             values: vec![0.5, 1.0, 2.0],
         };
+
+        assert_eq!(expected_result, actual_result);
     }
 
 
@@ -111,8 +123,39 @@ mod tests {
         }
 
 
+
         #[test]
         fn add_two_rles2() {
+
+            let rle1 = FloatRle {
+                lengths: vec![1, 1],
+                values: vec![0.0, 1.0],
+            };
+
+            let rle2 = FloatRle {
+                lengths: vec![2],
+                values: vec![1.0],
+            };
+
+            let expected_result = FloatRle {
+                lengths: vec![1, 1],
+                values: vec![0.0, 1.0],
+            };
+
+            println!("Test starts");
+
+            let actual_result = rle1.op_float(&rle2, |x, y| x / y, 0 as f64);
+
+            println!("Result struct: {:?}", actual_result);
+
+            assert_eq!(expected_result, actual_result);
+
+
+        }
+
+
+        #[test]
+        fn add_two_rles4() {
 
             let rle1 = FloatRle {
                 lengths: vec![1, 4, 2],
@@ -186,6 +229,40 @@ mod tests {
 
 
     #[test]
+    fn divide_two_rles1() {
+
+        let rle1 = FloatRle {
+            lengths: vec![1, 1],
+            values: vec![0.0, 1.0],
+        };
+
+        let rle2 = FloatRle {
+            lengths: vec![2],
+            values: vec![0.0],
+        };
+
+        let nan = "NaN".parse::<f64>().unwrap();
+        let inf = "inf".parse::<f64>().unwrap();
+
+        let expected_result = FloatRle {
+            lengths: vec![1, 1],
+            values: vec![nan, inf],
+        };
+
+        println!("Test starts");
+
+        let actual_result = rle1.op_float(&rle2, |x, y| x / y, 0.0);
+
+        println!("Result struct: {:?}", actual_result);
+
+        assert_eq!(vec_compare(&expected_result.values.as_slice(), &actual_result.values.as_slice()), true);
+        assert_eq!(expected_result.lengths, actual_result.lengths);
+
+
+    }
+
+
+    #[test]
     fn add_two_rles7_one_is_wrong_length() {
 
         let rle1 = FloatRle {
@@ -210,7 +287,6 @@ mod tests {
         println!("Result struct: {:?}", actual_result);
 
         assert_eq!(expected_result, actual_result);
-        // assert_eq!(rle1.op_int((&rle2, |x, y|  x + y, 0), expected_result);
 
 
     }

@@ -2,9 +2,12 @@ import pandas as pd
 import numpy as np
 import os
 import sys, ctypes
-from ctypes import c_char_p, c_int32, c_int64, Structure, POINTER, c_int32, c_size_t, pointer
+from ctypes import c_char_p, c_int32, Structure, POINTER, c_int32, c_size_t, pointer, c_double
 
-class RleS(Structure):
+class IRleS(Structure):
+    pass
+
+class FRleS(Structure):
     pass
 
 prefix = {'win32': ''}.get(sys.platform, 'lib')
@@ -20,24 +23,45 @@ except OSError:
 lib.rle_find_zero_lengths.argtypes = (POINTER(c_int32), c_int32)
 lib.rle_find_zero_lengths.restype = c_int32
 
-lib.int_rle_new.restype = POINTER(RleS)
+lib.int_rle_new.restype = POINTER(IRleS)
 
-lib.int_rle_free.argtypes = (POINTER(RleS), )
+lib.int_rle_free.argtypes = (POINTER(IRleS), )
 
-lib.int_rle_values.argtypes = (POINTER(RleS), )
+lib.int_rle_values.argtypes = (POINTER(IRleS), )
 lib.int_rle_values.restype = POINTER(c_int32)
 
-lib.int_rle_lengths.argtypes = (POINTER(RleS), )
+lib.int_rle_lengths.argtypes = (POINTER(IRleS), )
 lib.int_rle_lengths.restype = POINTER(c_int32)
 
-lib.int_rle_values_size.argtypes = (POINTER(RleS), )
+lib.int_rle_values_size.argtypes = (POINTER(IRleS), )
 lib.int_rle_values_size.restype = c_int32
 
-lib.int_rle_lengths_size.argtypes = (POINTER(RleS), )
+lib.int_rle_lengths_size.argtypes = (POINTER(IRleS), )
 lib.int_rle_lengths_size.restype = c_int32
 
-lib.int_rle_add.argtypes = (POINTER(RleS), POINTER(RleS))
-lib.int_rle_add.restype = POINTER(RleS)
+lib.int_rle_add.argtypes = (POINTER(IRleS), POINTER(IRleS))
+lib.int_rle_add.restype = POINTER(IRleS)
+
+
+
+lib.float_rle_divide.argtypes = (POINTER(FRleS), POINTER(FRleS))
+lib.float_rle_divide.restype = POINTER(FRleS)
+
+lib.float_rle_new.restype = POINTER(FRleS)
+
+lib.float_rle_free.argtypes = (POINTER(FRleS), )
+
+lib.float_rle_values.argtypes = (POINTER(FRleS), )
+lib.float_rle_values.restype = POINTER(c_double)
+
+lib.float_rle_lengths.argtypes = (POINTER(FRleS), )
+lib.float_rle_lengths.restype = POINTER(c_double)
+
+lib.float_rle_values_size.argtypes = (POINTER(FRleS), )
+lib.float_rle_values_size.restype = c_double
+
+lib.float_rle_lengths_size.argtypes = (POINTER(FRleS), )
+lib.float_rle_lengths_size.restype = c_double
 
 
 def format_rle(size, lengths_pointer, values_pointer):

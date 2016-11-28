@@ -66,6 +66,16 @@ pub extern "C" fn float_rle_add(rle_self: *mut FloatRle,
 }
 
 
+#[no_mangle]
+pub extern "C" fn float_rle_divide(rle_self: *mut FloatRle,
+                                   rle_other: *mut FloatRle,
+                                   identity: f64)
+                                   -> *mut FloatRle {
+    return Box::into_raw(Box::new(unsafe { &*rle_self }
+        .op_float(unsafe { &*rle_other }, |x, y| x / y, identity)));
+}
+
+
 
 
 #[derive(Debug, PartialEq)]
